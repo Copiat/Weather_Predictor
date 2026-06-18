@@ -1,0 +1,118 @@
+@inject IDbContextFactory<WeatherDbContext> DbFactory
+@inject WidgetStateService State
+
+<div class="config-overlay">
+    <div class="config-head">
+        <h2>Configuration</h2>
+        <button class="close-btn" @onclick="OnClose" title="Close" aria-label="Close">✕</button>
+    </div>
+
+    <div class="config-body">
+        <div class="section-title">API status — last hour</div>
+        <StatusIndicator Poll="State.LastPoll" />
+
+        <div class="section-title">Verify history — enter actual high</div>
+        <div class="actual-form">
+            <input type="date" @bind="_entryDate" />
+            <input type="number" placeholder="°C" step="0.1" @bind="_entryTemp" />
+            <button @onclick="SaveActualAsync">Save</button>
+        </div>
+        @if (_toast != null)
+        {
+            <div class="@(_toastOk ? "toast ok" : "toast err")">@_toast</div>
+        }
+
+        <div class="section-title">Recent verified actuals</div>
+        <div class="actual-list">
+            @if (_actuals.Count == 0)
+            {
+                <div class="actual-item"><span class="date">No actuals entered yet.</span></div>
+            }
+            else
+            {
+                @foreach (var a in _actuals)
+                {
+                    <div class="actual-item">
+                        <span class="date">@a.Date.ToString("yyyy-MM-dd")</span>
+                        <span>
+                            <span class="temp">@a.TemperatureCelsius.ToString("0.0") °C</span>
+                            <button class="del" @onclick="@(async () => await DeleteActualAsync(a.Id))" title="Remove">✕</button>
+                        </span>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private DateOnly _entryDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-1));
+    private double? _entryTemp;
+    private string? _toast;
+    private bool _toastOk;
+
+    private List<ActualTemperature> _actuals = new();
+
+    protected override async Task OnInitializedAsync()
+        => await LoadActualsAsync();
+
+    private async Task LoadActualsAsync()
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _actuals = await db.Actuals
+            .OrderByDescending(a => a.Date)
+            .Take(25)
+            .ToListAsync();
+    }
+
+    private async Task SaveActualAsync()
+    {
+        if (_entryTemp is null)
+        {
+            _toast = "Enter a temperature value.";
+            _toastOk = false;
+            return;
+        }
+
+        var date = _entryDate.ToDateTime(TimeOnly.MinValue);
+        await using var db = await DbFactory.CreateDbContextAsync();
+        var existing = await db.Actuals.FirstOrDefaultAsync(a => a.Date == date);
+        if (existing != null)
+        {
+            existing.TemperatureCelsius = _entryTemp.Value;
+            existing.EnteredUtc = DateTime.UtcNow;
+        }
+        else
+        {
+            db.Actuals.Add(new ActualTemperature
+            {
+                Date = date,
+                TemperatureCelsius = _entryTemp.Value,
+                EnteredUtc = DateTime.UtcNow,
+                Source = "manual"
+            });
+        }
+        await db.SaveChangesAsync();
+
+        _toast = $"Saved actual for {date:yyyy-MM-dd}.";
+        _toastOk = true;
+        _entryTemp = null;
+        await LoadActualsAsync();
+        State.Notify();
+    }
+
+    private async Task DeleteActualAsync(int id)
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+        var a = await db.Actuals.FindAsync(id);
+        if (a != null)
+        {
+            db.Actuals.Remove(a);
+            await db.SaveChangesAsync();
+        }
+        await LoadActualsAsync();
+        State.Notify();
+    }
+}

@@ -1,0 +1,26 @@
+@* Quick per-provider status indicator showing which APIs responded OK
+   during the most recent hourly poll. Reusable across the main + config views. *@
+<div class="provider-grid">
+    @if (Poll.Count == 0)
+    {
+        <div class="provider-row"><span class="name">No poll completed yet.</span></div>
+    }
+    else
+    {
+        @foreach (var p in Poll.OrderBy(p => p.Provider))
+        {
+            <div class="provider-row">
+                <span>
+                    <span class="dot @(p.Success ? "ok" : "fail")"></span>
+                    <span class="name">@p.Provider</span>
+                </span>
+                <span class="val">@(p.Success ? $"{p.TemperatureCelsius:0.0} °C" : "offline")</span>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter]
+    public IReadOnlyList<ProviderPollStatus> Poll { get; set; } = Array.Empty<ProviderPollStatus>();
+}

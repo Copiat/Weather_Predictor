@@ -1,0 +1,385 @@
+/* ============================================================
+   Schiphol Smart Weather Widget - Glass-morphic UI
+   The Photino window is chromeless + transparent, so this CSS
+   paints the entire visible, draggable, frosted-glass canvas.
+   ============================================================ */
+
+:root {
+    --glass-bg: rgba(22, 26, 38, 0.55);
+    --glass-bg-strong: rgba(22, 26, 38, 0.72);
+    --glass-border: rgba(255, 255, 255, 0.16);
+    /*--glass-highlight: rgba(255, 255, 255, 0.08);*/
+    --text-primary: rgba(255, 255, 255, 0.96);
+    --text-secondary: rgba(255, 255, 255, 0.62);
+    --text-muted: rgba(255, 255, 255, 0.40);
+    --accent: #f5b942;            /* warm amber - no indigo/blue */
+    --accent-soft: rgba(245, 185, 66, 0.18);
+    --success: #4ade80;
+    --warn: #fbbf24;
+    --danger: #f87171;
+    --radius: 18px;
+    --shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+    --font: "Segoe UI Variable", "Segoe UI", -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    font-family: var(--font);
+    color: var(--text-primary);
+    background: transparent;       /* Photino window is transparent */
+    -webkit-font-smoothing: antialiased;
+    user-select: none;
+}
+
+/* The body itself is the drag canvas. Interactive elements opt out via .no-drag. */
+.widget-body { cursor: default; }
+
+/* ---------- Glass canvas ---------- */
+.widget-shell {
+    position: relative;
+    height: 100vh;
+    width: 100vw;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--glass-bg);
+    backdrop-filter: blur(26px) saturate(160%);
+    -webkit-backdrop-filter: blur(26px) saturate(160%);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow), inset 0 1px 0 var(--glass-highlight);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Subtle ambient gradient glow inside the glass */
+.widget-shell::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(120% 80% at 15% 0%, rgba(245, 185, 66, 0.10), transparent 60%),
+        radial-gradient(100% 70% at 100% 100%, rgba(74, 222, 128, 0.08), transparent 55%);
+    pointer-events: none;
+}
+
+/* ---------- Header ---------- */
+.widget-header {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px 6px;
+    z-index: 2;
+}
+
+.widget-loc {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+}
+.widget-loc .station {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    color: var(--text-primary);
+}
+.widget-loc .meta {
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+}
+
+.cog-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 9px;
+    border: 1px solid var(--glass-border);
+    background: var(--glass-highlight);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: transform 0.25s ease, color 0.2s ease, background 0.2s ease;
+}
+.cog-btn:hover { color: var(--accent); background: var(--accent-soft); }
+.cog-btn.spin:hover svg { transform: rotate(90deg); }
+.cog-btn svg { transition: transform 0.35s ease; }
+
+/* ---------- Main prediction display ---------- */
+.widget-main {
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 16px 8px;
+    z-index: 2;
+}
+
+.pred-label {
+    font-size: 10px;
+    letter-spacing: 2.4px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+}
+
+.pred-temp {
+    display: flex;
+    align-items: flex-start;
+    gap: 4px;
+}
+.pred-temp .value {
+    font-size: 76px;
+    font-weight: 300;
+    line-height: 1;
+    letter-spacing: -2px;
+    color: var(--text-primary);
+    text-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+    font-variant-numeric: tabular-nums;
+}
+.pred-temp .unit {
+    font-size: 26px;
+    font-weight: 400;
+    color: var(--accent);
+    margin-top: 8px;
+}
+
+.pred-sub {
+    margin-top: 6px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    text-align: center;
+}
+.pred-sub .delta-up { color: var(--danger); }
+.pred-sub .delta-down { color: var(--success); }
+.pred-sub .delta-flat { color: var(--text-muted); }
+
+.pred-conf {
+    margin-top: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.4px;
+}
+.conf-bar {
+    width: 80px;
+    height: 4px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    overflow: hidden;
+}
+.conf-bar > i {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), #ffd479);
+    border-radius: 999px;
+    transition: width 0.6s ease;
+}
+
+/* ---------- Footer / refresh row ---------- */
+.widget-footer {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px 12px;
+    font-size: 10px;
+    color: var(--text-muted);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.refresh-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border-radius: 9px;
+    border: 1px solid var(--glass-border);
+    background: var(--glass-highlight);
+    color: var(--text-secondary);
+    font-size: 10px;
+    cursor: pointer;
+    letter-spacing: 0.4px;
+    transition: all 0.2s ease;
+}
+.refresh-btn:hover { color: var(--accent); background: var(--accent-soft); }
+.refresh-btn:disabled { opacity: 0.55; cursor: wait; }
+.refresh-btn svg { transition: transform 0.6s ease; }
+.refresh-btn.spinning svg { transform: rotate(360deg); }
+
+/* ---------- Config overlay ---------- */
+.config-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    background: var(--glass-bg-strong);
+    backdrop-filter: blur(30px) saturate(170%);
+    -webkit-backdrop-filter: blur(30px) saturate(170%);
+    display: flex;
+    flex-direction: column;
+    padding: 14px 16px;
+    animation: fadeSlide 0.28s ease;
+}
+
+@keyframes fadeSlide {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.config-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+.config-head h2 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--text-primary);
+}
+.close-btn {
+    width: 24px; height: 24px;
+    border-radius: 8px;
+    border: 1px solid var(--glass-border);
+    background: var(--glass-highlight);
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+}
+.close-btn:hover { color: var(--danger); }
+
+.config-body {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 4px;
+}
+
+/* Custom scrollbar inside the glass */
+.config-body::-webkit-scrollbar { width: 6px; }
+.config-body::-webkit-scrollbar-track { background: transparent; }
+.config-body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.16);
+    border-radius: 999px;
+}
+.config-body::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.28); }
+
+.section-title {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--text-muted);
+    margin: 10px 0 6px;
+}
+
+/* Provider status grid */
+.provider-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 5px;
+}
+.provider-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 9px;
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 11px;
+}
+.provider-row .name { color: var(--text-secondary); }
+.provider-row .val { font-variant-numeric: tabular-nums; color: var(--text-primary); }
+.dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    display: inline-block; margin-right: 7px;
+}
+.dot.ok { background: var(--success); box-shadow: 0 0 6px var(--success); }
+.dot.fail { background: var(--danger); }
+.dot.idle { background: var(--text-muted); }
+
+/* Manual actual-temperature entry */
+.actual-form {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+.actual-form input {
+    flex: 1;
+    padding: 7px 9px;
+    border-radius: 9px;
+    border: 1px solid var(--glass-border);
+    background: rgba(0, 0, 0, 0.25);
+    color: var(--text-primary);
+    font-size: 12px;
+    font-family: var(--font);
+    outline: none;
+}
+.actual-form input:focus { border-color: var(--accent); }
+.actual-form input::placeholder { color: var(--text-muted); }
+.actual-form input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.8); }
+.actual-form button {
+    padding: 7px 12px;
+    border-radius: 9px;
+    border: 1px solid var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.actual-form button:hover { background: var(--accent); color: #1a1a1a; }
+.actual-form button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.actual-list {
+    display: flex; flex-direction: column; gap: 4px;
+}
+.actual-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 6px 9px; border-radius: 9px;
+    background: rgba(255, 255, 255, 0.03);
+    font-size: 11px;
+}
+.actual-item .date { color: var(--text-secondary); }
+.actual-item .temp { color: var(--accent); font-variant-numeric: tabular-nums; font-weight: 600; }
+.actual-item .del {
+    margin-left: 8px; color: var(--text-muted); cursor: pointer; border: none; background: none; font-size: 12px;
+}
+.actual-item .del:hover { color: var(--danger); }
+
+.toast {
+    margin-top: 8px;
+    padding: 7px 10px;
+    border-radius: 9px;
+    font-size: 11px;
+    text-align: center;
+}
+.toast.ok { background: rgba(74, 222, 128, 0.14); color: var(--success); }
+.toast.err { background: rgba(248, 113, 113, 0.14); color: var(--danger); }
+
+.loading-pulse {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 1s ease-in-out infinite;
+}
+@keyframes pulse {
+    0%, 100% { opacity: 0.3; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.1); }
+}

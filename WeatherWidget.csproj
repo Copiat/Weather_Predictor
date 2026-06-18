@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <!-- Build a Windows GUI executable that opens the Photino widget (no console window) -->
+    <OutputType>WinExe</OutputType>
+    <UseWindowsForms>false</UseWindowsForms>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <RootNamespace>WeatherWidget</RootNamespace>
+    <AssemblyName>WeatherWidget</AssemblyName>
+    <Version>1.0.0</Version>
+    <Company>WeatherWidget</Company>
+    <Product>Schiphol Smart Weather Widget</Product>
+    <ApplicationIcon>Capture.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Photino.Blazor: native desktop Blazor host (lightweight, no Electron) -->
+    <PackageReference Include="Photino.Blazor" Version="3.1.0" />
+    <!-- Entity Framework Core + SQLite for local persistence -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Blazor static assets are served from wwwroot -->
+    <Content Update="wwwroot\**\*" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Configuration must ship next to the executable -->
+    <None Update="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

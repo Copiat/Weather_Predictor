@@ -1,0 +1,61 @@
+@inject IJSRuntime JS
+@inject WidgetStateService State
+@inject WeatherOrchestrator Orchestrator
+@using WeatherWidget.Native
+@implements IDisposable
+
+<div class="widget-shell">
+    @if (_showConfig)
+    {
+        <ConfigView OnClose="@HideConfig" />
+    }
+    else
+    {
+        <MainView OnOpenConfig="@ShowConfig" />
+    }
+</div>
+
+@code {
+    private bool _showConfig;
+    private DotNetObjectReference<WidgetShell>? _dotRef;
+
+    protected override void OnInitialized()
+        => State.OnChange += HandleChange;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _dotRef = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("widgetInterop.initDrag", _dotRef);
+        }
+    }
+
+    private void HandleChange()
+        => InvokeAsync(StateHasChanged);
+
+    private void ShowConfig() => _showConfig = true;
+    private void HideConfig() => _showConfig = false;
+
+    /// <summary>
+    /// Invoked from JavaScript (interop.js) whenever the user mouse-downs on
+    /// the glass background. Forwards the gesture to Win32 so the OS drags the
+    /// borderless, transparent window.
+    /// </summary>
+    [JSInvokable]
+    public void OnDragStart()
+    {
+        // Keep the widget on top (cheap no-op if already topmost) and begin drag.
+        if (State.WindowHandle != IntPtr.Zero)
+        {
+            Win32.SetTopMost(State.WindowHandle, true);
+            Win32.BeginDrag(State.WindowHandle);
+        }
+    }
+
+    public void Dispose()
+    {
+        State.OnChange -= HandleChange;
+        _dotRef?.Dispose();
+    }
+}

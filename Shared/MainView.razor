@@ -1,0 +1,65 @@
+@inject WidgetStateService State
+@inject WeatherOrchestrator Orchestrator
+
+<div class="widget-header">
+    <div class="widget-loc">
+        <span class="station">EHAM · Schiphol</span>
+        <span class="meta">Smart Daily High</span>
+    </div>
+    <Cogwheel OnClick="OnOpenConfig" />
+</div>
+
+<div class="widget-main">
+    <div class="pred-label">Smart Prediction · Daily High</div>
+
+    @if (State.Prediction is null)
+    {
+        <div class="pred-temp">
+            <span class="value">--</span>
+            <span class="unit">°C</span>
+        </div>
+        <div class="pred-sub">
+            <span class="loading-pulse"></span>
+            @(State.IsPolling ? "Gathering forecasts…" : "Awaiting first poll")
+        </div>
+    }
+    else
+    {
+        var p = State.Prediction;
+        <div class="pred-temp">
+            <span class="value">@p.PredictedHighC.ToString("0.0")</span>
+            <span class="unit">°C</span>
+        </div>
+        <div class="pred-sub">
+            @p.SourceCount sources · spread @p.Min.ToString("0.0")–@p.Max.ToString("0.0") °C · σ @p.StdDev.ToString("0.0")
+        </div>
+        <div class="pred-conf">
+            <span>Confidence</span>
+            <span class="conf-bar"><i style="width:@(p.Confidence.ToString("0"))%"></i></span>
+            <span>@p.Confidence.ToString("0")%</span>
+        </div>
+    }
+</div>
+
+<div class="widget-footer">
+    <span title="Last data refresh (local time)">
+        @(State.LastRefreshUtc == default ? "—" : State.LastRefreshUtc.ToLocalTime().ToString("HH:mm"))
+    </span>
+    <button class="refresh-btn @(State.IsPolling ? "spinning" : "")"
+            disabled="@State.IsPolling" @onclick="RefreshAsync">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+        </svg>
+        @(State.IsPolling ? "Polling" : "Refresh")
+    </button>
+</div>
+
+@code {
+    [Parameter] public EventCallback OnOpenConfig { get; set; }
+
+    private async Task RefreshAsync()
+        => await Orchestrator.PollNowAsync();
+}

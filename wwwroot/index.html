@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Schiphol Smart Weather</title>
+    <link rel="stylesheet" href="css/app.css" />
+</head>
+<body class="widget-body">
+    <!-- Blazor root: the entire widget renders here -->
+    <div id="app">Loading weather widget…</div>
+
+    <!-- Photino.Blazor desktop boot script. Must be started explicitly. -->
+    <script src="_framework/blazor.webview.js" autostart="false"></script>
+    <script>
+        Blazor.start();
+    </script>
+    <script src="js/interop.js"></script>
+</body>
+</html>
