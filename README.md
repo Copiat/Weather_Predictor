@@ -23,30 +23,4 @@ Built using **Photino.Blazor**, this application delivers a lightweight web-styl
 
 ## Configuration
 
-The widget relies on an `appsettings.json` deployment file located in the application execution directory [Program.cs, WeatherWidget.csproj].
-
-```json
-{
-  "Proxy": {
-    "Enabled": false,
-    "Address": ""
-  },
-  "WeatherWidget": {
-    "Database": {
-      "Path": "weatherwidget.db"
-    },
-    "Location": {
-      "Latitude": 52.3105,
-      "Longitude": 4.7683
-    },
-    "Polling": {
-      "RunImmediatelyOnStart": true,
-      "IntervalMinutes": 60
-    }
-  },
-  "WeatherProviders": {
-    "OpenWeatherMap": { "Enabled": true },
-    "WeatherApi": { "Enabled": false }
-    // Add configurations for remaining optional providers here
-  }
-}
+The widget relies on an `appsettings.json` deployment file located in the application execution directory.
